@@ -1,0 +1,5 @@
+data/lake/
+data/landing/
+.venv/
+__pycache__/
+.pytest_cache/

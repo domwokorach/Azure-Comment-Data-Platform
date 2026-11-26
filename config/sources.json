@@ -1,0 +1,45 @@
+{
+  "_comment": "Source registry. Adding a new source = adding an entry here, not writing a new pipeline (see ADR-0002).",
+  "sources": [
+    {
+      "source_system": "crm",
+      "entity": "customers",
+      "format": "csv",
+      "path": "data/landing/crm/customers.csv",
+      "primary_key": ["customer_id"],
+      "owner": "Customer Services",
+      "classification": "personal",
+      "load_type": "full"
+    },
+    {
+      "source_system": "permits",
+      "entity": "sites",
+      "format": "csv",
+      "path": "data/landing/permits/sites.csv",
+      "primary_key": ["site_id"],
+      "owner": "Permitting Team",
+      "classification": "internal",
+      "load_type": "full"
+    },
+    {
+      "source_system": "permits",
+      "entity": "permits",
+      "format": "csv",
+      "path": "data/landing/permits/permits.csv",
+      "primary_key": ["permit_id"],
+      "owner": "Permitting Team",
+      "classification": "internal",
+      "load_type": "full"
+    },
+    {
+      "source_system": "inspections",
+      "entity": "inspections",
+      "format": "json",
+      "path": "data/landing/inspections/inspections.json",
+      "primary_key": ["inspection_id"],
+      "owner": "Field Operations",
+      "classification": "internal",
+      "load_type": "incremental"
+    }
+  ]
+}

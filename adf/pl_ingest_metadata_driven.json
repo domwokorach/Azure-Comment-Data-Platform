@@ -1,0 +1,74 @@
+{
+  "name": "pl_ingest_metadata_driven",
+  "properties": {
+    "description": "One generic pipeline for every source. Reads the source registry (control table), copies each source to bronze, then runs the silver and gold notebooks. Mirrors cdp/pipeline.py.",
+    "parameters": {
+      "batch_id": { "type": "string", "defaultValue": "@{formatDateTime(utcnow(),'yyyyMMddTHHmmss')}" }
+    },
+    "activities": [
+      {
+        "name": "Lookup source registry",
+        "type": "Lookup",
+        "typeProperties": {
+          "source": {
+            "type": "AzureSqlSource",
+            "sqlReaderQuery": "SELECT source_system, entity, format, path, load_type FROM ctl.source_registry WHERE is_enabled = 1"
+          },
+          "dataset": { "referenceName": "ds_control_db", "type": "DatasetReference" },
+          "firstRowOnly": false
+        }
+      },
+      {
+        "name": "For each source",
+        "type": "ForEach",
+        "dependsOn": [{ "activity": "Lookup source registry", "dependencyConditions": ["Succeeded"] }],
+        "typeProperties": {
+          "items": { "value": "@activity('Lookup source registry').output.value", "type": "Expression" },
+          "isSequential": false,
+          "batchCount": 4,
+          "activities": [
+            {
+              "name": "Copy to bronze",
+              "type": "Copy",
+              "typeProperties": {
+                "source": { "type": "DelimitedTextSource" },
+                "sink": { "type": "ParquetSink" },
+                "enableStaging": false
+              },
+              "inputs": [{
+                "referenceName": "ds_landing_generic", "type": "DatasetReference",
+                "parameters": { "path": "@item().path", "format": "@item().format" }
+              }],
+              "outputs": [{
+                "referenceName": "ds_bronze_parquet", "type": "DatasetReference",
+                "parameters": {
+                  "folder": "@concat(item().source_system,'/',item().entity,'/batch_id=',pipeline().parameters.batch_id)"
+                }
+              }]
+            }
+          ]
+        }
+      },
+      {
+        "name": "Build silver (cleanse + quality)",
+        "type": "DatabricksNotebook",
+        "dependsOn": [{ "activity": "For each source", "dependencyConditions": ["Succeeded"] }],
+        "linkedServiceName": { "referenceName": "ls_databricks", "type": "LinkedServiceReference" },
+        "typeProperties": {
+          "notebookPath": "/cdp/silver",
+          "baseParameters": { "batch_id": "@pipeline().parameters.batch_id" }
+        }
+      },
+      {
+        "name": "Build gold (data products)",
+        "type": "DatabricksNotebook",
+        "dependsOn": [{ "activity": "Build silver (cleanse + quality)", "dependencyConditions": ["Succeeded"] }],
+        "linkedServiceName": { "referenceName": "ls_databricks", "type": "LinkedServiceReference" },
+        "typeProperties": {
+          "notebookPath": "/cdp/gold",
+          "baseParameters": { "batch_id": "@pipeline().parameters.batch_id" }
+        }
+      }
+    ]
+  }
+}
