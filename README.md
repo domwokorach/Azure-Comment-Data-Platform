@@ -177,4 +177,3 @@ tests/                     layer contract tests
 
 ---
 *All data in this project is synthetic. Built as a portfolio project to show data architecture practice: patterns and standards, data modelling, governance, and clear communication.*
-# Azure-Comment-Data-Platform
