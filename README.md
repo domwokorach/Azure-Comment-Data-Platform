@@ -1,4 +1,4 @@
-# Common Data Platform on Azure
+# Comment Data Platform on Azure
 
 **A reference architecture and working prototype for a shared data platform in a public-sector agency.**
 It brings data from three separate systems into one trusted place, with standards for ingestion, quality and governance, and produces a business-ready view of which permitted sites are highest risk.
